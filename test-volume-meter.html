@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volume Meter Test - ChaoOPIc</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #1565c0;
+            margin-bottom: 20px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .test-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .test-btn.start {
+            background: #4caf50;
+            color: white;
+        }
+        .test-btn.start:hover {
+            background: #45a049;
+        }
+        .test-btn.stop {
+            background: #f44336;
+            color: white;
+        }
+        .test-btn.stop:hover {
+            background: #da190b;
+        }
+        .test-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .status.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status.inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 16px;
+            border-left: 4px solid #1565c0;
+            border-radius: 4px;
+            margin-top: 16px;
+        }
+        .info-box strong {
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-section">
+        <h2>🎤 실시간 음량 미터 테스트</h2>
+        <p>마이크 권한을 허용한 후 "모니터링 시작" 버튼을 클릭하세요.</p>
+
+        <div id="volumeMeterContainer"></div>
+
+        <div class="button-group">
+            <button id="startBtn" class="test-btn start">🎤 모니터링 시작</button>
+            <button id="stopBtn" class="test-btn stop" disabled>⏹ 모니터링 중지</button>
+        </div>
+
+        <div id="status" class="status inactive">
+            ⚠️ 모니터링 비활성
+        </div>
+
+        <div class="info-box">
+            <strong>📌 테스트 방법:</strong>
+            <ul style="margin: 8px 0 0 20px;">
+                <li>마이크에 대고 말을 하거나 소리를 내세요</li>
+                <li>음량에 따라 바의 색상이 변경됩니다:
+                    <ul>
+                        <li><span style="color: #4caf50;">초록색</span>: 낮은 음량 (0-60)</li>
+                        <li><span style="color: #ffc107;">노란색</span>: 중간 음량 (60-80)</li>
+                        <li><span style="color: #f44336;">빨간색</span>: 높은 음량 (80-100)</li>
+                    </ul>
+                </li>
+                <li>브라우저 콘솔(F12)에서 상세 로그를 확인할 수 있습니다</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 기술 정보</h2>
+        <div style="font-family: monospace; font-size: 14px; line-height: 1.8;">
+            <div><strong>Audio API:</strong> <span id="apiSupport">확인 중...</span></div>
+            <div><strong>MediaDevices:</strong> <span id="mediaSupport">확인 중...</span></div>
+            <div><strong>AudioContext:</strong> <span id="contextSupport">확인 중...</span></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/core/app.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/audio.js"></script>
+
+    <script>
+        var audio = ChaoOPIc.core.audio;
+        var ui = ChaoOPIc.core.ui;
+
+        var startBtn = document.getElementById('startBtn');
+        var stopBtn = document.getElementById('stopBtn');
+        var status = document.getElementById('status');
+        var container = document.getElementById('volumeMeterContainer');
+
+        // 지원 여부 확인
+        document.getElementById('apiSupport').textContent =
+            (window.Audio ? '✅ 지원됨' : '❌ 지원 안됨');
+        document.getElementById('mediaSupport').textContent =
+            (navigator.mediaDevices ? '✅ 지원됨' : '❌ 지원 안됨');
+        document.getElementById('contextSupport').textContent =
+            (window.AudioContext || window.webkitAudioContext ? '✅ 지원됨' : '❌ 지원 안됨');
+
+        // Volume Meter 생성 (simulation.js와 동일한 로직)
+        function createVolumeMeter() {
+            var meterContainer = ui.createElement('div', { className: 'opic-volume-meter-container inactive' });
+
+            var label = ui.createElement('div', { className: 'opic-volume-meter-label' }, '🎤 음량');
+            meterContainer.appendChild(label);
+
+            var meter = ui.createElement('div', { className: 'opic-volume-meter' });
+
+            var bars = [];
+            for (var i = 0; i < 20; i++) {
+                var bar = ui.createElement('div', { className: 'opic-volume-bar' });
+                bars.push(bar);
+                meter.appendChild(bar);
+            }
+
+            var valueDisplay = ui.createElement('div', { className: 'opic-volume-value' }, '0');
+            meter.appendChild(valueDisplay);
+
+            meterContainer.appendChild(meter);
+
+            meterContainer.updateVolume = function(volume) {
+                valueDisplay.textContent = volume;
+
+                var activeCount = Math.round((volume / 100) * 20);
+
+                bars.forEach(function(bar, index) {
+                    if (index < activeCount) {
+                        bar.className = 'opic-volume-bar active';
+
+                        if (volume > 80) {
+                            bar.className += ' high';
+                        } else if (volume > 60) {
+                            bar.className += ' mid';
+                        }
+                    } else {
+                        bar.className = 'opic-volume-bar';
+                    }
+                });
+            };
+
+            meterContainer.startMonitoring = function() {
+                meterContainer.classList.remove('inactive');
+                audio.volumeMonitor.start(function(volume) {
+                    meterContainer.updateVolume(volume);
+                });
+            };
+
+            meterContainer.stopMonitoring = function() {
+                meterContainer.classList.add('inactive');
+                audio.volumeMonitor.stop();
+                meterContainer.updateVolume(0);
+            };
+
+            return meterContainer;
+        }
+
+        var volumeMeter = createVolumeMeter();
+        container.appendChild(volumeMeter);
+
+        // 버튼 이벤트
+        startBtn.addEventListener('click', function() {
+            console.log('[Test] Starting volume monitoring...');
+            volumeMeter.startMonitoring();
+
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            status.className = 'status active';
+            status.innerHTML = '✅ 모니터링 활성 (마이크에 대고 말해보세요!)';
+        });
+
+        stopBtn.addEventListener('click', function() {
+            console.log('[Test] Stopping volume monitoring...');
+            volumeMeter.stopMonitoring();
+
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            status.className = 'status inactive';
+            status.innerHTML = '⚠️ 모니터링 비활성';
+        });
+
+        // 페이지 언로드 시 정리
+        window.addEventListener('beforeunload', function() {
+            if (audio.volumeMonitor.isActive()) {
+                volumeMeter.stopMonitoring();
+            }
+        });
+    </script>
+</body>
+</html>

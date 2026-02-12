@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Save Test - ChaoOPIc</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #1565c0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e65100;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 16px;
+            border-left: 4px solid #1565c0;
+            border-radius: 4px;
+            margin: 16px 0;
+        }
+        .info-box strong {
+            color: #1565c0;
+        }
+        .api-support {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .api-support.supported {
+            background: #d4edda;
+            color: #155724;
+        }
+        .api-support.unsupported {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .mock-recordings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .mock-recording {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mock-recording.active {
+            background: #e3f2fd;
+            border: 2px solid #1565c0;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-section">
+        <h2>💾 파일 저장 기능 테스트</h2>
+
+        <div class="info-box">
+            <strong>🔍 API 지원 여부:</strong><br>
+            <div style="margin-top: 8px;">
+                File System Access API:
+                <span id="apiStatus" class="api-support">확인 중...</span>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 24px;">📝 Mock 녹음 데이터</h3>
+        <p style="color: #666;">실제 녹음 대신 테스트용 Blob을 생성합니다.</p>
+
+        <div class="mock-recordings" id="mockRecordings"></div>
+
+        <button id="generateBtn" class="btn btn-primary" style="margin-top: 16px;">
+            🎲 Mock 데이터 생성 (5개)
+        </button>
+
+        <div id="saveSection" style="display: none; margin-top: 24px;">
+            <div class="opic-save-section">
+                <h3 style="margin-bottom:12px;text-align:center;color:#1565c0;">💾 녹음 파일 저장</h3>
+                <p style="text-align:center;color:#666;margin-bottom:16px;">
+                    <strong id="recordCount">0</strong>개의 녹음 파일을 저장할 수 있습니다.
+                </p>
+
+                <div class="opic-save-btn-group">
+                    <button id="saveFolderBtn" class="btn btn-primary" style="display:none;">
+                        📁 폴더에 저장
+                    </button>
+                    <button id="downloadBtn" class="btn btn-secondary">
+                        ⬇️ 개별 다운로드
+                    </button>
+                </div>
+
+                <div id="saveProgress" class="opic-save-progress" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="info-box" style="margin-top: 24px;">
+            <strong>📌 테스트 시나리오:</strong>
+            <ol style="margin: 12px 0 0 20px; line-height: 1.8;">
+                <li>"Mock 데이터 생성" 버튼 클릭</li>
+                <li>5개의 테스트용 녹음 데이터 생성</li>
+                <li>
+                    <strong>Chrome/Edge 86+:</strong> "📁 폴더에 저장" 버튼으로 폴더 선택하여 저장<br>
+                    <strong>기타 브라우저:</strong> "⬇️ 개별 다운로드" 버튼으로 파일 다운로드
+                </li>
+                <li>저장된 파일 확인:
+                    <ul>
+                        <li>파일명: <code>recording-q01-YYYYMMDD-HHMMSS.webm</code></li>
+                        <li>폴더명 (Chrome/Edge): <code>ChaoOPIc-Recordings-YYYYMMDD-HHMMSS/</code></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 기술 정보</h2>
+        <div style="font-family: monospace; font-size: 14px; line-height: 1.8;">
+            <div><strong>Browser:</strong> <span id="browserInfo">확인 중...</span></div>
+            <div><strong>Platform:</strong> <span id="platformInfo">확인 중...</span></div>
+            <div><strong>File System Access API:</strong> <span id="fsapiInfo">확인 중...</span></div>
+            <div><strong>MediaRecorder API:</strong> <span id="mediaRecorderInfo">확인 중...</span></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/core/app.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/audio.js"></script>
+
+    <script>
+        var audio = ChaoOPIc.core.audio;
+        var ui = ChaoOPIc.core.ui;
+
+        var mockRecordings = [];
+
+        // API 지원 여부 확인
+        function checkAPISupport() {
+            var apiStatus = document.getElementById('apiStatus');
+            var saveFolderBtn = document.getElementById('saveFolderBtn');
+
+            if (audio.fileSaver.isSupported()) {
+                apiStatus.textContent = '✅ 지원됨 (폴더 저장 가능)';
+                apiStatus.className = 'api-support supported';
+                saveFolderBtn.style.display = 'inline-block';
+            } else {
+                apiStatus.textContent = '❌ 미지원 (개별 다운로드만 가능)';
+                apiStatus.className = 'api-support unsupported';
+            }
+
+            // 기술 정보 표시
+            document.getElementById('browserInfo').textContent = navigator.userAgent.split(' ').slice(-2).join(' ');
+            document.getElementById('platformInfo').textContent = navigator.platform;
+            document.getElementById('fsapiInfo').textContent =
+                ('showDirectoryPicker' in window) ? '✅ 지원됨' : '❌ 미지원';
+            document.getElementById('mediaRecorderInfo').textContent =
+                (window.MediaRecorder) ? '✅ 지원됨' : '❌ 미지원';
+        }
+
+        // Mock 녹음 데이터 생성
+        function generateMockRecordings(count) {
+            mockRecordings = [];
+
+            for (var i = 0; i < count; i++) {
+                // 테스트용 작은 오디오 데이터 생성
+                var text = 'Recording ' + (i + 1) + ' - Test Audio Data';
+                var blob = new Blob([text], { type: 'audio/webm' });
+                mockRecordings.push(blob);
+            }
+
+            console.log('[Test] Generated', mockRecordings.length, 'mock recordings');
+            displayMockRecordings();
+            showSaveSection();
+        }
+
+        // Mock 데이터 표시
+        function displayMockRecordings() {
+            var container = document.getElementById('mockRecordings');
+            container.innerHTML = '';
+
+            mockRecordings.forEach(function(blob, index) {
+                var item = document.createElement('div');
+                item.className = 'mock-recording active';
+                item.innerHTML = '🎤 녹음 ' + (index + 1) + ' <small>(' + blob.size + ' bytes)</small>';
+                container.appendChild(item);
+            });
+        }
+
+        // 저장 섹션 표시
+        function showSaveSection() {
+            var section = document.getElementById('saveSection');
+            var countSpan = document.getElementById('recordCount');
+
+            countSpan.textContent = mockRecordings.length;
+            section.style.display = 'block';
+        }
+
+        // 폴더에 저장
+        function handleSaveToFolder() {
+            var progressDiv = document.getElementById('saveProgress');
+            var btnGroup = document.querySelector('.opic-save-btn-group');
+
+            // 버튼 비활성화
+            var buttons = btnGroup.querySelectorAll('button');
+            buttons.forEach(function(btn) { btn.disabled = true; });
+
+            // 진행 상태 표시
+            progressDiv.style.display = 'block';
+            progressDiv.className = 'opic-save-progress';
+            progressDiv.innerHTML = '폴더를 선택해주세요...';
+
+            audio.fileSaver.saveToDirectory(
+                mockRecordings,
+                function onProgress(current, total) {
+                    var percentage = Math.round((current / total) * 100);
+                    progressDiv.innerHTML = '저장 중: ' + current + ' / ' + total + ' (' + percentage + '%)';
+                },
+                function onComplete(success, message) {
+                    progressDiv.className = 'opic-save-progress ' + (success ? 'success' : 'error');
+                    progressDiv.innerHTML = (success ? '✅ ' : '❌ ') + message;
+
+                    // 버튼 다시 활성화
+                    buttons.forEach(function(btn) { btn.disabled = false; });
+
+                    ui.showToast(message, success ? 'success' : 'error');
+                }
+            );
+        }
+
+        // 개별 다운로드
+        function handleDownloadFiles() {
+            var progressDiv = document.getElementById('saveProgress');
+            var btnGroup = document.querySelector('.opic-save-btn-group');
+
+            // 버튼 비활성화
+            var buttons = btnGroup.querySelectorAll('button');
+            buttons.forEach(function(btn) { btn.disabled = true; });
+
+            // 진행 상태 표시
+            progressDiv.style.display = 'block';
+            progressDiv.className = 'opic-save-progress';
+            progressDiv.innerHTML = '다운로드 준비 중...';
+
+            audio.fileSaver.downloadFiles(
+                mockRecordings,
+                function onProgress(current, total) {
+                    var percentage = Math.round((current / total) * 100);
+                    progressDiv.innerHTML = '다운로드 중: ' + current + ' / ' + total + ' (' + percentage + '%)';
+                },
+                function onComplete(success, message) {
+                    progressDiv.className = 'opic-save-progress ' + (success ? 'success' : 'error');
+                    progressDiv.innerHTML = (success ? '✅ ' : '❌ ') + message;
+
+                    // 버튼 다시 활성화
+                    buttons.forEach(function(btn) { btn.disabled = false; });
+
+                    ui.showToast(message, success ? 'success' : 'error');
+                }
+            );
+        }
+
+        // 이벤트 리스너
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            generateMockRecordings(5);
+        });
+
+        document.getElementById('saveFolderBtn').addEventListener('click', handleSaveToFolder);
+        document.getElementById('downloadBtn').addEventListener('click', handleDownloadFiles);
+
+        // 초기화
+        checkAPISupport();
+    </script>
+</body>
+</html>

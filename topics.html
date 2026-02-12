@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주제별 학습 - ChaoOPIc</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo"><a href="index.html">ChaoOPIc</a></h1>
+            <nav class="nav-links"></nav>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <div class="container" id="topics-root">
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 ChaoOPIc v1.0.0</p>
+        </div>
+    </footer>
+
+    <!-- Core -->
+    <script src="js/core/app.js"></script>
+    <script src="js/core/storage.js"></script>
+    <script src="js/core/audio.js"></script>
+    <script src="js/core/timer.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/dataLoader.js"></script>
+    <!-- Data -->
+    <script src="js/data/topics/self-intro.js"></script>
+    <script src="js/data/topics/hobby.js"></script>
+    <script src="js/data/topics/travel.js"></script>
+    <script src="js/data/topics/work.js"></script>
+    <script src="js/data/topics/daily.js"></script>
+    <!-- Page -->
+    <script src="js/pages/topics.js"></script>
+    <script>
+        ChaoOPIc.core.ui.renderNav('topics');
+        ChaoOPIc.pages.topics.init();
+    </script>
+</body>
+</html>

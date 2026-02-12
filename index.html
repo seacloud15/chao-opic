@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChaoOPIc - 베트남어 OPIc 학습</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo"><a href="index.html">ChaoOPIc</a></h1>
+            <nav class="nav-links"></nav>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <div class="container">
+            <section class="hero">
+                <h2>베트남어 OPIc, 함께 준비해요!</h2>
+                <p>부서원들의 베트남어 OPIc 등급 취득을 효율적으로 지원하는 시험 시뮬레이션 및 학습 보조 프로그램입니다.</p>
+            </section>
+
+            <section class="card-grid">
+                <a href="simulation.html" class="card">
+                    <span class="card-icon">🎯</span>
+                    <h3>오픽 시뮬레이션</h3>
+                    <p>실제 OPIc 시험과 동일한 형식으로 모의 시험을 진행합니다.</p>
+                </a>
+                <a href="topics.html" class="card">
+                    <span class="card-icon">📚</span>
+                    <h3>주제별 연습</h3>
+                    <p>주제별 문제 듣기 및 답변 연습을 할 수 있습니다.</p>
+                </a>
+                <a href="vocabulary.html" class="card">
+                    <span class="card-icon">📝</span>
+                    <h3>어휘 학습</h3>
+                    <p>간격 반복 학습으로 핵심 베트남어 어휘를 암기합니다.</p>
+                </a>
+                <a href="#" class="card" id="card-guide">
+                    <span class="card-icon">⚙️</span>
+                    <h3>학습 자료 관리</h3>
+                    <p>학습 콘텐츠를 직접 수정하여 커스터마이징할 수 있습니다.</p>
+                </a>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 ChaoOPIc v1.0.0</p>
+        </div>
+    </footer>
+
+    <script src="js/core/app.js"></script>
+    <script src="js/core/storage.js"></script>
+    <script src="js/core/audio.js"></script>
+    <script src="js/core/timer.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/dataLoader.js"></script>
+    <script>
+        (function() {
+            var ui = ChaoOPIc.core.ui;
+            ui.renderNav('index');
+
+            var guideCard = ui.$('#card-guide');
+            if (guideCard) {
+                guideCard.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    ui.showModal({
+                        title: '학습 자료 커스터마이징 가이드',
+                        content:
+                            '<p>ChaoOPIc의 학습 콘텐츠는 파일을 직접 편집하여 수정할 수 있습니다.</p>' +
+                            '<h4 style="margin-top:16px;">수정 가능한 파일</h4>' +
+                            '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:0.9rem;">' +
+                            '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;font-weight:600;">주제별 질문</td><td style="padding:8px;"><code>js/data/topics/*.js</code></td></tr>' +
+                            '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;font-weight:600;">단어 리스트</td><td style="padding:8px;"><code>js/data/vocabulary/words.js</code></td></tr>' +
+                            '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:8px;font-weight:600;">시뮬레이션 질문</td><td style="padding:8px;"><code>js/data/simulation/questions.js</code></td></tr>' +
+                            '<tr><td style="padding:8px;font-weight:600;">음성 파일</td><td style="padding:8px;"><code>audio/</code> 폴더 내 mp3 파일 교체</td></tr>' +
+                            '</table>' +
+                            '<h4 style="margin-top:16px;">주의사항</h4>' +
+                            '<ul style="margin-top:8px;padding-left:20px;font-size:0.9rem;">' +
+                            '<li>JS 파일 수정 시 따옴표와 쉼표에 주의하세요.</li>' +
+                            '<li>음성 파일은 동일한 파일명으로 교체하세요.</li>' +
+                            '<li>수정 후 브라우저에서 새로고침(F5)하면 반영됩니다.</li>' +
+                            '</ul>',
+                        buttons: [{ label: '확인', className: 'btn-primary' }]
+                    });
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

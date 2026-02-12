@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오픽 시뮬레이션 - ChaoOPIc</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="logo"><a href="index.html">ChaoOPIc</a></h1>
+            <nav class="nav-links"></nav>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <div class="container" id="sim-root">
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 ChaoOPIc v1.0.0</p>
+        </div>
+    </footer>
+
+    <!-- Core -->
+    <script src="js/core/app.js"></script>
+    <script src="js/core/storage.js"></script>
+    <script src="js/core/audio.js"></script>
+    <script src="js/core/timer.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/dataLoader.js"></script>
+    <!-- Data -->
+    <script src="js/data/simulation/topicMapping.js"></script>
+    <script src="js/data/simulation/audioFileIndex.js"></script>
+    <script src="js/data/simulation/questions.js"></script>
+    <!-- Core - Question Selection -->
+    <script src="js/core/fileScanner.js"></script>
+    <script src="js/core/questionSelector.js"></script>
+    <!-- Page -->
+    <script src="js/pages/simulation.js"></script>
+    <script>
+        ChaoOPIc.core.ui.renderNav('simulation');
+        ChaoOPIc.pages.simulation.init();
+    </script>
+</body>
+</html>

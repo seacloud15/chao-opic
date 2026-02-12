@@ -1,0 +1,218 @@
+/**
+ * ChaoOPIc - Audio File Index Generator
+ * audio/simulation 폴더를 스캔하여 js/data/simulation/audioFileIndex.js 생성
+ *
+ * Usage: node scripts/generateAudioIndex.js
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const AUDIO_ROOT = path.join(__dirname, '../audio/simulation');
+const OUTPUT_FILE = path.join(__dirname, '../js/data/simulation/audioFileIndex.js');
+
+// 지원하는 오디오 파일 확장자
+const AUDIO_EXTENSIONS = ['.mp3', '.m4a', '.wav', '.wma'];
+
+/**
+ * 디렉토리를 재귀적으로 스캔하여 오디오 파일 목록 생성
+ */
+function scanDirectory(dirPath, basePath = dirPath) {
+  const result = {};
+
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        // 하위 디렉토리 재귀 스캔
+        const subResult = scanDirectory(fullPath, basePath);
+        if (Object.keys(subResult).length > 0) {
+          result[entry.name] = subResult;
+        }
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (AUDIO_EXTENSIONS.includes(ext)) {
+          // 상대 경로로 변환 (Windows → Unix path)
+          const relativePath = path.relative(path.join(__dirname, '..'), fullPath)
+            .replace(/\\/g, '/');
+
+          if (!result._files) {
+            result._files = [];
+          }
+          result._files.push(relativePath);
+        }
+      }
+    }
+
+    // _files를 번호순으로 정렬 (1, 2, 3 또는 11, 12, 13 순서)
+    if (result._files) {
+      result._files.sort((a, b) => {
+        const aName = path.basename(a);
+        const bName = path.basename(b);
+
+        // 파일명에서 숫자 추출
+        const aMatch = aName.match(/^(\d+)/);
+        const bMatch = bName.match(/^(\d+)/);
+
+        if (aMatch && bMatch) {
+          return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+        }
+
+        return aName.localeCompare(bName);
+      });
+    }
+  } catch (error) {
+    console.error(`Error scanning directory ${dirPath}:`, error.message);
+  }
+
+  return result;
+}
+
+/**
+ * 카테고리별로 구조화
+ */
+function structureByCategory(scanned) {
+  const structured = {
+    'self-introduction': [],
+    'selfAssess': [],
+    'survey': {},
+    'non-survey': {},
+    'rolePlay': {}
+  };
+
+  // self-introduction
+  if (scanned['self-introduction'] && scanned['self-introduction']._files) {
+    structured['self-introduction'] = scanned['self-introduction']._files;
+  }
+
+  // selfAssess
+  if (scanned['selfAssess'] && scanned['selfAssess']._files) {
+    structured['selfAssess'] = scanned['selfAssess']._files;
+  }
+
+  // survey
+  if (scanned['survey']) {
+    for (const [topicName, topicData] of Object.entries(scanned['survey'])) {
+      if (topicName !== '_files' && topicData._files) {
+        structured['survey'][topicName] = topicData._files;
+      }
+    }
+  }
+
+  // non-survey
+  if (scanned['non-survey']) {
+    for (const [topicName, topicData] of Object.entries(scanned['non-survey'])) {
+      if (topicName !== '_files' && topicData._files) {
+        structured['non-survey'][topicName] = topicData._files;
+      }
+    }
+  }
+
+  // rolePlay
+  if (scanned['rolePlay']) {
+    for (const [topicName, topicData] of Object.entries(scanned['rolePlay'])) {
+      if (topicName !== '_files' && topicData._files) {
+        structured['rolePlay'][topicName] = topicData._files;
+      }
+    }
+  }
+
+  return structured;
+}
+
+/**
+ * 통계 출력
+ */
+function printStats(structured) {
+  console.log('\n=== Audio File Index Statistics ===');
+  console.log(`Self-introduction: ${structured['self-introduction'].length} files`);
+  console.log(`Self-assessment: ${structured['selfAssess'].length} files`);
+  console.log(`Survey topics: ${Object.keys(structured['survey']).length} topics`);
+
+  let surveyTotal = 0;
+  for (const files of Object.values(structured['survey'])) {
+    surveyTotal += files.length;
+  }
+  console.log(`  └─ Total files: ${surveyTotal}`);
+
+  console.log(`Non-survey topics: ${Object.keys(structured['non-survey']).length} topics`);
+  let nonSurveyTotal = 0;
+  for (const files of Object.values(structured['non-survey'])) {
+    nonSurveyTotal += files.length;
+  }
+  console.log(`  └─ Total files: ${nonSurveyTotal}`);
+
+  console.log(`RolePlay topics: ${Object.keys(structured['rolePlay']).length} topics`);
+  let rolePlayTotal = 0;
+  for (const files of Object.values(structured['rolePlay'])) {
+    rolePlayTotal += files.length;
+  }
+  console.log(`  └─ Total files: ${rolePlayTotal}`);
+
+  const grandTotal = structured['self-introduction'].length +
+                     structured['selfAssess'].length +
+                     surveyTotal +
+                     nonSurveyTotal +
+                     rolePlayTotal;
+  console.log(`\nGrand Total: ${grandTotal} audio files`);
+  console.log('===================================\n');
+}
+
+/**
+ * JavaScript 파일 생성
+ */
+function generateJavaScriptFile(data, outputPath) {
+  const template = `/**
+ * ChaoOPIc - Audio File Index
+ * Generated by: scripts/generateAudioIndex.js
+ * Generated at: ${new Date().toISOString()}
+ *
+ * WARNING: This file is auto-generated. Do not edit manually.
+ * Run 'node scripts/generateAudioIndex.js' to regenerate.
+ */
+
+var ChaoOPIc = ChaoOPIc || {};
+ChaoOPIc.data = ChaoOPIc.data || {};
+
+ChaoOPIc.data.audioFileIndex = ${JSON.stringify(data, null, 2)};
+`;
+
+  // 출력 디렉토리가 없으면 생성
+  const outputDir = path.dirname(outputPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  fs.writeFileSync(outputPath, template, 'utf-8');
+}
+
+// === Main Execution ===
+
+console.log('ChaoOPIc Audio File Index Generator');
+console.log('====================================\n');
+
+// 1. audio/simulation 폴더 존재 확인
+if (!fs.existsSync(AUDIO_ROOT)) {
+  console.error(`Error: Audio directory not found: ${AUDIO_ROOT}`);
+  process.exit(1);
+}
+
+console.log(`Scanning: ${AUDIO_ROOT}`);
+
+// 2. 디렉토리 스캔
+const scanned = scanDirectory(AUDIO_ROOT);
+
+// 3. 카테고리별 구조화
+const structured = structureByCategory(scanned);
+
+// 4. 통계 출력
+printStats(structured);
+
+// 5. JavaScript 파일 생성
+generateJavaScriptFile(structured, OUTPUT_FILE);
+
+console.log(`✓ Generated: ${OUTPUT_FILE}`);
+console.log('✓ Audio file index successfully created!');
