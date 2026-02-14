@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Generation Test - ChaoOPIc</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #1565c0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e65100;
+        }
+        .survey-form {
+            margin: 20px 0;
+        }
+        .survey-group {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .survey-group label {
+            display: block;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .questions-list {
+            margin-top: 20px;
+        }
+        .question-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #e3f2fd;
+            border-left: 4px solid #1565c0;
+            border-radius: 4px;
+        }
+        .question-item strong {
+            color: #1565c0;
+        }
+        .folder-info {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .error {
+            background: #ffebee;
+            border-left-color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-section">
+        <h2>🧪 문제 생성 로직 테스트</h2>
+
+        <div class="survey-form">
+            <h3>Mock Survey 응답</h3>
+
+            <div class="survey-group">
+                <strong>Self Assessment Level (난이도)</strong><br>
+                <label><input type="radio" name="level" value="1"> Level 1 (초급)</label>
+                <label><input type="radio" name="level" value="2"> Level 2</label>
+                <label><input type="radio" name="level" value="3" checked> Level 3 (중급)</label>
+                <label><input type="radio" name="level" value="4"> Level 4</label>
+                <label><input type="radio" name="level" value="5"> Level 5 (고급)</label>
+                <label><input type="radio" name="level" value="6"> Level 6</label>
+            </div>
+
+            <div class="survey-group">
+                <strong>Part 3: 거주 형태</strong><br>
+                <label>
+                    <input type="radio" name="part3" value="개인주택이나 아파트에 홀로 거주" checked>
+                    개인주택이나 아파트에 홀로 거주
+                </label>
+            </div>
+
+            <div class="survey-group">
+                <strong>Part 4: 여가/취미/운동/휴가 (12개 이상 선택)</strong><br>
+                <label><input type="checkbox" name="part4" value="영화보기" checked> 영화보기</label><br>
+                <label><input type="checkbox" name="part4" value="공원가기" checked> 공원가기</label><br>
+                <label><input type="checkbox" name="part4" value="해변가기" checked> 해변가기</label><br>
+                <label><input type="checkbox" name="part4" value="공연보기" checked> 공연보기</label><br>
+                <label><input type="checkbox" name="part4" value="콘서트보기" checked> 콘서트보기</label><br>
+                <label><input type="checkbox" name="part4" value="음악 감상하기" checked> 음악 감상하기</label><br>
+                <label><input type="checkbox" name="part4" value="조깅" checked> 조깅</label><br>
+                <label><input type="checkbox" name="part4" value="걷기" checked> 걷기</label><br>
+                <label><input type="checkbox" name="part4" value="국내 여행" checked> 국내 여행</label><br>
+                <label><input type="checkbox" name="part4" value="해외 여행" checked> 해외 여행</label><br>
+                <label><input type="checkbox" name="part4" value="집에서 보내는 휴가" checked> 집에서 보내는 휴가</label><br>
+                <label><input type="checkbox" name="part4" value="요리하기" checked> 요리하기</label>
+            </div>
+
+            <button id="generateBtn" class="btn btn-primary">문제 생성 테스트</button>
+        </div>
+
+        <div id="results" class="questions-list"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/core/app.js"></script>
+    <script src="js/core/audioIndexManager.js"></script>
+    <script src="js/data/simulation/audioFileIndex.js"></script>
+    <script src="js/core/fileScanner.js"></script>
+    <script src="js/core/questionSelector.js"></script>
+
+    <script>
+        var fileScanner = ChaoOPIc.core.fileScanner;
+        var questionSelector = ChaoOPIc.core.questionSelector;
+
+        // fileScanner 초기화 (localStorage 또는 audioFileIndex.js에서 로드)
+        if (!fileScanner.initialize()) {
+            console.error('Failed to initialize fileScanner. Please set up audio files in audio-manager.html');
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            console.clear();
+            console.log('=== 문제 생성 테스트 시작 ===');
+
+            // Mock Survey 응답 수집
+            var selfAssessLevel = parseInt(document.querySelector('input[name="level"]:checked').value);
+            var part3 = document.querySelector('input[name="part3"]:checked').value;
+            var part4Checkboxes = document.querySelectorAll('input[name="part4"]:checked');
+            var part4 = [];
+            part4Checkboxes.forEach(function(cb) {
+                part4.push(cb.value);
+            });
+
+            var surveyAnswers = {
+                part3: part3,
+                part4: part4
+            };
+
+            console.log('Survey 응답:', surveyAnswers);
+            console.log('Self Assessment Level:', selfAssessLevel);
+
+            // ===== 폴더 매칭 테스트 =====
+            console.log('\n=== 1단계: Survey 폴더 매칭 테스트 ===');
+
+            // Part 3 테스트
+            console.log('\n[Part 3] "' + part3 + '"');
+            var part3Folders = fileScanner.findSurveyFolders(part3);
+            console.log('→ 발견된 폴더:', part3Folders);
+            var selectedPart3 = fileScanner.getRandomSurveyFolder(part3);
+            console.log('→ 선택된 폴더:', selectedPart3);
+
+            // Part 4 테스트
+            console.log('\n[Part 4] 선택된 항목:', part4.length + '개');
+            part4.forEach(function(answer) {
+                var folders = fileScanner.findSurveyFolders(answer);
+                var selected = fileScanner.getRandomSurveyFolder(answer);
+                console.log('  "' + answer + '" → 폴더 ' + folders.length + '개 발견, 선택: ' + selected);
+            });
+
+            // ===== 문제 생성 테스트 =====
+            console.log('\n=== 2단계: 전체 문제 세트 생성 ===');
+            var questions = questionSelector.generate(surveyAnswers, selfAssessLevel);
+
+            console.log('생성된 문제 수:', questions.length);
+            questionSelector.printSummary(questions);
+
+            // ===== 결과 표시 =====
+            var resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h3>생성된 문제 (' + questions.length + '개)</h3>';
+            resultsDiv.innerHTML += '<p><strong>난이도:</strong> Level ' + selfAssessLevel + ' | <strong>Q15 파일 번호:</strong> ' + (selfAssessLevel <= 4 ? '6번' : '5번') + '</p>';
+
+            if (questions.length < 15) {
+                resultsDiv.innerHTML += '<div class="question-item error"><strong>⚠️ 경고:</strong> 15개 문제가 생성되지 않았습니다!</div>';
+            }
+
+            questions.forEach(function(q) {
+                var div = document.createElement('div');
+                div.className = 'question-item';
+
+                var html = '<strong>Q' + q.number + '</strong> [' + q.category + ']<br>';
+                html += '<strong>Topic:</strong> ' + q.topic + '<br>';
+                html += '<strong>Text:</strong> ' + q.text;
+
+                if (q.audio) {
+                    html += '<div class="folder-info">📁 ' + q.audio + '</div>';
+                } else {
+                    div.className += ' error';
+                    html += '<div class="folder-info">❌ 오디오 파일 없음!</div>';
+                }
+
+                div.innerHTML = html;
+                resultsDiv.appendChild(div);
+            });
+
+            console.log('=== 테스트 완료 ===');
+        });
+
+        // 페이지 로드 시 fileScanner 통계 출력
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('=== audioFileIndex 통계 ===');
+            fileScanner.printStats();
+
+            // Survey 답변 샘플로 폴더 검색 테스트
+            console.log('\n=== 폴더 검색 테스트 ===');
+            var testAnswers = ['공원가기', '영화보기', '음악 감상하기', '해외 여행'];
+            testAnswers.forEach(function(answer) {
+                var folders = fileScanner.findSurveyFolders(answer);
+                console.log('"' + answer + '" → ' + folders.length + '개 폴더:', folders);
+            });
+        });
+    </script>
+</body>
+</html>

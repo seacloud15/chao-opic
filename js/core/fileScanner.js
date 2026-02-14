@@ -7,7 +7,32 @@
 ChaoOPIc.core.fileScanner = (function() {
   'use strict';
 
-  var audioIndex = ChaoOPIc.data.audioFileIndex;
+  var audioIndex = null; // localStorage에서 로드됨
+
+  /**
+   * localStorage에서 오디오 인덱스 초기화
+   * @returns {boolean} - 초기화 성공 여부
+   */
+  function initialize() {
+    // audioIndexManager가 있으면 localStorage에서 로드
+    if (ChaoOPIc.core.audioIndexManager) {
+      audioIndex = ChaoOPIc.core.audioIndexManager.loadFromStorage();
+      if (audioIndex) {
+        console.log('[fileScanner] Audio index loaded from localStorage');
+        return true;
+      }
+    }
+
+    // 폴백: ChaoOPIc.data.audioFileIndex 사용 (하위 호환성)
+    if (ChaoOPIc.data && ChaoOPIc.data.audioFileIndex) {
+      audioIndex = ChaoOPIc.data.audioFileIndex;
+      console.log('[fileScanner] Audio index loaded from audioFileIndex.js (fallback)');
+      return true;
+    }
+
+    console.error('[fileScanner] No audio index found. Please set up audio files in audio-manager.html');
+    return false;
+  }
 
   /**
    * 카테고리와 토픽명으로 오디오 파일 목록 조회
@@ -78,6 +103,41 @@ ChaoOPIc.core.fileScanner = (function() {
   }
 
   /**
+   * 파일 목록에서 특정 번호가 포함된 파일들 필터링
+   * @param {Array<string>} files - 파일 경로 배열
+   * @param {number} number - 찾을 번호 (1,2,3,4,5,6,11,12,13)
+   * @returns {Array<string>} - 매칭되는 파일 경로 배열
+   */
+  function getFilesByNumber(files, number) {
+    // 패턴: (시작 또는 하이픈 또는 공백) + 번호 + 점
+    // 예: "1. tts...", "Bác sĩ - 11.mp3", "something 11.mp3"
+    var pattern = new RegExp('(^|[-\\s])' + number + '\\.');
+    return files.filter(function(filepath) {
+      var filename = filepath.split('/').pop();
+      return pattern.test(filename);
+    });
+  }
+
+  /**
+   * 특정 번호의 파일들 중 랜덤으로 하나 선택
+   * @param {Array<string>} files - 파일 경로 배열
+   * @param {number} number - 문제 번호 (1,2,3,4,5,6,11,12,13)
+   * @returns {string|null} - 선택된 파일 경로 또는 null
+   */
+  function getRandomFileByNumber(files, number) {
+    var matched = getFilesByNumber(files, number);
+    if (matched.length === 0) {
+      console.warn('[fileScanner] No files found for number:', number);
+      return null;
+    }
+
+    var randomIndex = Math.floor(Math.random() * matched.length);
+    var selected = matched[randomIndex];
+    console.log('[fileScanner] Selected file for number', number + ':', selected, '(from', matched.length, 'options)');
+    return selected;
+  }
+
+  /**
    * 파일 경로 목록에서 1,2,3번 문제 추출
    * @param {Array<string>} files - 파일 경로 배열
    * @returns {Object} - {q1: path, q2: path, q3: path}
@@ -144,6 +204,55 @@ ChaoOPIc.core.fileScanner = (function() {
   }
 
   /**
+   * Survey 답변으로 매칭되는 모든 폴더 찾기
+   * @param {string} answer - Survey 답변 (예: "영화보기")
+   * @returns {Array<string>} - 매칭되는 폴더명 배열 (예: ["영화보기_01", "영화보기_02"])
+   */
+  function findSurveyFolders(answer) {
+    if (!audioIndex || !audioIndex.survey) {
+      console.error('[fileScanner] audioIndex.survey not found');
+      return [];
+    }
+
+    var folders = [];
+
+    // {답변}_XX 패턴 찾기 (예: "영화보기_01", "영화보기_02")
+    // 정규식: answer로 시작하고 _숫자2자리로 끝나는 패턴
+    var escapedAnswer = answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // 특수문자 이스케이프
+    var pattern = new RegExp('^' + escapedAnswer + '_\\d{2}$');
+
+    for (var folderName in audioIndex.survey) {
+      if (pattern.test(folderName)) {
+        folders.push(folderName);
+      }
+    }
+
+    if (folders.length === 0) {
+      console.warn('[fileScanner] No survey folders found for answer:', answer);
+    }
+
+    return folders;
+  }
+
+  /**
+   * Survey 답변에서 랜덤으로 폴더 하나 선택
+   * @param {string} answer - Survey 답변
+   * @returns {string|null} - 선택된 폴더명 또는 null
+   */
+  function getRandomSurveyFolder(answer) {
+    var folders = findSurveyFolders(answer);
+    if (folders.length === 0) {
+      return null;
+    }
+
+    var randomIndex = Math.floor(Math.random() * folders.length);
+    var selected = folders[randomIndex];
+
+    console.log('[fileScanner] Selected folder for "' + answer + '":', selected, '(from', folders.length, 'options)');
+    return selected;
+  }
+
+  /**
    * 디버깅용: 전체 인덱스 통계 출력
    */
   function printStats() {
@@ -157,11 +266,16 @@ ChaoOPIc.core.fileScanner = (function() {
 
   // Public API
   return {
+    initialize: initialize,
     getFilesByTopic: getFilesByTopic,
     getAllTopics: getAllTopics,
     extractTextFromFilename: extractTextFromFilename,
     extractQuestions123: extractQuestions123,
     extractQuestions111213: extractQuestions111213,
+    getFilesByNumber: getFilesByNumber,
+    getRandomFileByNumber: getRandomFileByNumber,
+    findSurveyFolders: findSurveyFolders,
+    getRandomSurveyFolder: getRandomSurveyFolder,
     printStats: printStats
   };
 })();

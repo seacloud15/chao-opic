@@ -783,7 +783,7 @@ ChaoOPIc.pages.simulation = (function() {
   function startExam() {
     // Survey 응답 기반 문제 생성
     var questionSelector = ChaoOPIc.core.questionSelector;
-    state.questions = questionSelector.generate(state.surveyAnswers);
+    state.questions = questionSelector.generate(state.surveyAnswers, state.selfAssessLevel);
 
     // 디버깅용 요약 출력 (개발 시에만, 배포 시 제거 가능)
     if (console && console.log) {

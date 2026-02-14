@@ -32,6 +32,7 @@
     <script src="js/core/timer.js"></script>
     <script src="js/core/ui.js"></script>
     <script src="js/core/dataLoader.js"></script>
+    <script src="js/core/audioIndexManager.js"></script>
     <!-- Data -->
     <script src="js/data/simulation/topicMapping.js"></script>
     <script src="js/data/simulation/audioFileIndex.js"></script>
@@ -43,7 +44,22 @@
     <script src="js/pages/simulation.js"></script>
     <script>
         ChaoOPIc.core.ui.renderNav('simulation');
-        ChaoOPIc.pages.simulation.init();
+
+        // fileScanner 초기화 (localStorage 또는 audioFileIndex.js에서 로드)
+        if (!ChaoOPIc.core.fileScanner.initialize()) {
+            // 초기화 실패 시 경고 메시지 표시
+            ChaoOPIc.core.ui.showModal({
+                title: '⚠️ 오디오 파일 인덱스 없음',
+                content: '<p>오디오 파일 인덱스를 찾을 수 없습니다.</p>' +
+                         '<p><a href="audio-manager.html" style="color:#1565c0;text-decoration:underline;">학습 자료 관리</a> 페이지에서 오디오 폴더를 선택하고 스캔해주세요.</p>',
+                buttons: [
+                    { label: '학습 자료 관리로 이동', className: 'btn-primary',
+                      onClick: function() { window.location.href = 'audio-manager.html'; } }
+                ]
+            });
+        } else {
+            ChaoOPIc.pages.simulation.init();
+        }
     </script>
 </body>
 </html>
