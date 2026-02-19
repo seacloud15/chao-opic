@@ -1,6 +1,6 @@
 /**
  * ChaoOPIc - Topics Page Logic
- * 주제별 학습: 주제 목록 → 질문 학습 (음성, 스크립트, 해석, 녹음)
+ * 주제별 학습: 카테고리 선택 → 폴더 선택 → 파일 리스트 (음성 재생 + 스크립트 보기)
  */
 ChaoOPIc.pages.topics = (function() {
   var ui = ChaoOPIc.core.ui;
@@ -8,209 +8,301 @@ ChaoOPIc.pages.topics = (function() {
   var dataLoader = ChaoOPIc.core.dataLoader;
 
   var state = {
-    view: 'list',
-    currentTopic: null,
-    currentIndex: 0,
-    showTranslation: false,
-    showSample: false,
-    recordingBlob: null
+    view: 'categories',      // 'categories' | 'folders' | 'files'
+    currentCategory: null,   // 선택된 카테고리 ID
+    currentFolder: null,     // 선택된 폴더 ID
+    currentFileIndex: 0,     // 현재 파일 인덱스
+    playingFileId: null,     // 재생 중인 파일 ID
+    expandedScripts: {}      // { fileId: true/false } 스크립트 펼침 상태
   };
 
-  function renderTopicList() {
-    state.view = 'list';
-    var root = ui.$('#topics-root');
-    var topics = dataLoader.getTopicList();
+  // ============================================
+  // View Renderers
+  // ============================================
 
+  /**
+   * 카테고리 선택 화면 렌더링
+   */
+  function renderCategories() {
+    state.view = 'categories';
+    var root = document.getElementById('topics-root');
     root.innerHTML = '';
-    root.appendChild(ui.createElement('h2', { className: 'section-title' }, '주제를 선택하세요'));
-    root.appendChild(ui.createElement('p', { className: 'section-subtitle' }, '학습하고 싶은 주제를 클릭하면 질문 연습을 시작합니다.'));
+
+    var title = ui.createElement('h2', { className: 'section-title' }, '주제별 학습');
+    var subtitle = ui.createElement('p', { className: 'section-subtitle' }, '카테고리를 선택하세요');
+    root.appendChild(title);
+    root.appendChild(subtitle);
 
     var grid = ui.createElement('div', { className: 'topic-grid' });
+    var categories = dataLoader.getCategories();
 
-    topics.forEach(function(t) {
-      var card = ui.createElement('div', { className: 'topic-card', 'data-id': t.id });
-      card.appendChild(ui.createElement('span', { className: 'topic-icon' }, t.icon));
-      card.appendChild(ui.createElement('div', { className: 'topic-title' }, t.title));
-      card.appendChild(ui.createElement('div', { className: 'topic-count' }, t.questionCount + '개 질문'));
-      card.addEventListener('click', function() {
-        selectTopic(t.id);
+    categories.forEach(function(category) {
+      var folderCount = dataLoader.getCategoryFolders(category.id).length;
+      var card = ui.createElement('div', {
+        className: 'topic-card',
+        'data-category': category.id
       });
+
+      card.addEventListener('click', function() {
+        handleCategoryClick(category.id);
+      });
+
+      card.appendChild(ui.createElement('span', { className: 'topic-icon' }, category.icon));
+      card.appendChild(ui.createElement('div', { className: 'topic-title' }, category.title));
+      card.appendChild(ui.createElement('div', { className: 'topic-subtitle' }, category.titleKo));
+      card.appendChild(ui.createElement('div', { className: 'topic-count' }, folderCount + '개 주제'));
+
       grid.appendChild(card);
     });
 
     root.appendChild(grid);
 
-    if (topics.length === 0) {
-      root.appendChild(ui.createElement('p', { className: 'text-center text-muted mt-lg' }, '등록된 주제가 없습니다. js/data/topics/ 폴더에 데이터 파일을 추가하세요.'));
+    if (categories.length === 0) {
+      root.appendChild(ui.createElement('div', { className: 'empty-message' },
+        '카테고리가 없습니다. js/data/topics/categories.js 파일을 확인하세요.'
+      ));
     }
   }
 
-  function selectTopic(topicId) {
-    var topic = dataLoader.getTopic(topicId);
-    if (!topic || !topic.questions || topic.questions.length === 0) {
-      ui.showToast('해당 주제에 질문이 없습니다.', 'error');
-      return;
-    }
-    state.currentTopic = topic;
-    state.currentIndex = 0;
-    state.showTranslation = false;
-    state.showSample = false;
-    state.recordingBlob = null;
-    renderQuestion();
-  }
-
-  function renderQuestion() {
-    state.view = 'detail';
-    var root = ui.$('#topics-root');
-    var topic = state.currentTopic;
-    var q = topic.questions[state.currentIndex];
-    var total = topic.questions.length;
-
+  /**
+   * 폴더 리스트 화면 렌더링
+   */
+  function renderFolders(categoryId) {
+    state.view = 'folders';
+    state.currentCategory = categoryId;
+    var root = document.getElementById('topics-root');
     root.innerHTML = '';
 
-    // 뒤로가기
-    var backLink = ui.createElement('a', { href: '#', className: 'back-link' }, '\u2190 주제 목록');
+    var categories = dataLoader.getCategories();
+    var category = categories.find(function(c) { return c.id === categoryId; });
+    if (!category) {
+      ui.showToast('카테고리를 찾을 수 없습니다.', 'error');
+      renderCategories();
+      return;
+    }
+
+    var folders = dataLoader.getCategoryFolders(categoryId);
+
+    // Back link
+    var backLink = ui.createElement('a', {
+      href: '#',
+      className: 'back-link'
+    }, '← 카테고리 목록');
     backLink.addEventListener('click', function(e) {
       e.preventDefault();
-      audio.stop();
-      renderTopicList();
+      handleBackNavigation();
     });
     root.appendChild(backLink);
 
-    // 제목 + 진행상황
-    root.appendChild(ui.createElement('h2', { className: 'section-title' }, topic.icon + ' ' + topic.title));
-    var progress = ui.createElement('div', { className: 'progress-container' });
-    ui.renderProgress(progress, state.currentIndex + 1, total);
-    root.appendChild(progress);
+    // Title
+    var title = ui.createElement('h2', { className: 'section-title' }, category.icon + ' ' + category.title);
+    var subtitle = ui.createElement('p', { className: 'section-subtitle' },
+      '학습할 주제를 선택하세요 (' + folders.length + '개 주제)');
+    root.appendChild(title);
+    root.appendChild(subtitle);
 
-    // 질문 카드
-    var card = ui.createElement('div', { className: 'question-card' });
+    // Folder grid
+    var grid = ui.createElement('div', { className: 'topic-grid' });
+    folders.forEach(function(folder) {
+      var card = ui.createElement('div', {
+        className: 'topic-card',
+        'data-folder-id': folder.id
+      });
 
-    // 베트남어 질문
-    card.appendChild(ui.createElement('p', { className: 'question-text vi' }, q.text));
+      card.addEventListener('click', function() {
+        handleFolderClick(folder.id);
+      });
 
-    // 오디오 컨트롤
-    var audioCtrl = ui.createElement('div', { className: 'audio-controls' });
-    var playBtn = ui.createElement('button', { className: 'btn btn-primary btn-icon', title: '음성 재생' }, '\uD83D\uDD0A');
-    playBtn.addEventListener('click', function() {
-      audio.play(q.audio);
+      card.appendChild(ui.createElement('span', { className: 'topic-icon' }, folder.icon));
+      card.appendChild(ui.createElement('div', { className: 'topic-title' }, folder.name));
+      card.appendChild(ui.createElement('div', { className: 'topic-count' }, folder.files.length + '개 문제'));
+
+      grid.appendChild(card);
     });
-    audioCtrl.appendChild(playBtn);
 
-    // 녹음 버튼
-    if (audio.recorder.isSupported()) {
-      var recBtn = ui.createElement('button', { className: 'btn btn-danger btn-icon', title: '답변 녹음' }, '\uD83C\uDFA4');
-      recBtn.addEventListener('click', function() {
-        if (audio.recorder.isRecording()) {
-          audio.recorder.stop(function(blob) {
-            state.recordingBlob = blob;
-            recBtn.textContent = '\uD83C\uDFA4';
-            recBtn.classList.remove('btn-success');
-            recBtn.classList.add('btn-danger');
-            ui.showToast('녹음이 저장되었습니다.', 'success');
-            renderPlayback();
-          });
+    root.appendChild(grid);
+
+    if (folders.length === 0) {
+      root.appendChild(ui.createElement('div', { className: 'empty-message' },
+        '이 카테고리에 주제가 없습니다.'
+      ));
+    }
+  }
+
+  /**
+   * 파일 리스트 화면 렌더링
+   */
+  function renderFiles(categoryId, folderId) {
+    state.view = 'files';
+    state.currentCategory = categoryId;
+    state.currentFolder = folderId;
+    var root = document.getElementById('topics-root');
+    root.innerHTML = '';
+
+    var folder = dataLoader.getFolder(categoryId, folderId);
+    if (!folder) {
+      ui.showToast('폴더를 찾을 수 없습니다.', 'error');
+      renderFolders(categoryId);
+      return;
+    }
+
+    var files = folder.files;
+
+    // Back link
+    var backLink = ui.createElement('a', {
+      href: '#',
+      className: 'back-link'
+    }, '← 주제 목록');
+    backLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      handleBackNavigation();
+    });
+    root.appendChild(backLink);
+
+    // Title
+    var title = ui.createElement('h2', { className: 'section-title' }, folder.icon + ' ' + folder.name);
+    root.appendChild(title);
+
+    // Progress
+    var progressContainer = ui.createElement('div', { className: 'progress-container' });
+    ui.renderProgress(progressContainer, state.currentFileIndex + 1, files.length);
+    root.appendChild(progressContainer);
+
+    // File list
+    var fileList = ui.createElement('div', { className: 'file-list' });
+
+    files.forEach(function(file, index) {
+      var fileItem = ui.createElement('div', {
+        className: 'file-item',
+        'data-file-id': file.id
+      });
+
+      var fileTitle = ui.createElement('div', { className: 'file-title' }, (index + 1) + '. ' + file.title);
+      fileItem.appendChild(fileTitle);
+
+      // Action buttons
+      var actions = ui.createElement('div', { className: 'file-actions' });
+
+      var playBtn = ui.createElement('button', {
+        className: 'btn btn-primary btn-sm play-btn'
+      }, '🔊 재생');
+      playBtn.addEventListener('click', function() {
+        state.currentFileIndex = index;
+        handlePlayClick(file);
+      });
+      actions.appendChild(playBtn);
+
+      var scriptBtn = ui.createElement('button', {
+        className: 'btn btn-secondary btn-sm script-btn'
+      }, state.expandedScripts[file.id] ? '📄 스크립트 숨기기 ▲' : '📄 스크립트 보기 ▼');
+      scriptBtn.addEventListener('click', function() {
+        handleScriptToggle(file.id);
+      });
+      actions.appendChild(scriptBtn);
+
+      fileItem.appendChild(actions);
+
+      // Script content
+      var scriptContent = ui.createElement('div', {
+        className: 'script-content' + (state.expandedScripts[file.id] ? '' : ' hidden')
+      });
+
+      if (state.expandedScripts[file.id]) {
+        if (file.scriptContent) {
+          // 스크립트 내용이 localStorage에 저장되어 있음
+          scriptContent.textContent = file.scriptContent;
         } else {
-          audio.recorder.start(function() {
-            recBtn.textContent = '\u23F9';
-            recBtn.classList.remove('btn-danger');
-            recBtn.classList.add('btn-success');
-          });
+          // 스크립트 파일이 없음
+          scriptContent.textContent = '스크립트 파일이 없습니다.';
+          scriptContent.style.color = 'var(--color-text-light)';
         }
-      });
-      audioCtrl.appendChild(recBtn);
+      }
+
+      fileItem.appendChild(scriptContent);
+      fileList.appendChild(fileItem);
+    });
+
+    root.appendChild(fileList);
+
+    if (files.length === 0) {
+      root.appendChild(ui.createElement('div', { className: 'empty-message' },
+        '이 주제에 문제가 없습니다.'
+      ));
     }
-
-    // 내 녹음 재생
-    var playbackContainer = ui.createElement('span', { id: 'playback-container' });
-    audioCtrl.appendChild(playbackContainer);
-    card.appendChild(audioCtrl);
-
-    // 한국어 해석 토글
-    var transBtn = ui.createElement('button', { className: 'btn btn-secondary mt-md' }, state.showTranslation ? '한국어 해석 숨기기 \u25B2' : '한국어 해석 보기 \u25BC');
-    var transContent = ui.createElement('div', { className: 'translation-toggle' + (state.showTranslation ? '' : ' hidden') }, q.translation);
-    transBtn.addEventListener('click', function() {
-      state.showTranslation = !state.showTranslation;
-      transContent.classList.toggle('hidden');
-      transBtn.textContent = state.showTranslation ? '한국어 해석 숨기기 \u25B2' : '한국어 해석 보기 \u25BC';
-    });
-    card.appendChild(transBtn);
-    card.appendChild(transContent);
-
-    // 모범 답변 토글
-    if (q.sampleAnswer) {
-      var sampleBtn = ui.createElement('button', { className: 'btn btn-secondary mt-md' }, state.showSample ? '모범 답변 숨기기 \u25B2' : '모범 답변 보기 \u25BC');
-      var sampleHtml = '<p style="color:#1e40af;margin-bottom:8px;">' + q.sampleAnswer + '</p>';
-      if (q.sampleTranslation) {
-        sampleHtml += '<p style="color:#6b7280;font-size:0.9rem;">' + q.sampleTranslation + '</p>';
-      }
-      var sampleContent = ui.createElement('div', { className: 'translation-toggle' + (state.showSample ? '' : ' hidden'), innerHTML: sampleHtml });
-      sampleBtn.addEventListener('click', function() {
-        state.showSample = !state.showSample;
-        sampleContent.classList.toggle('hidden');
-        sampleBtn.textContent = state.showSample ? '모범 답변 숨기기 \u25B2' : '모범 답변 보기 \u25BC';
-      });
-      card.appendChild(sampleBtn);
-      card.appendChild(sampleContent);
-    }
-
-    root.appendChild(card);
-
-    // 이전/다음 네비게이션
-    var nav = ui.createElement('div', { className: 'question-nav' });
-    var prevBtn = ui.createElement('button', {
-      className: 'btn btn-secondary',
-      disabled: state.currentIndex === 0 ? 'disabled' : null
-    }, '\u2190 이전');
-    prevBtn.addEventListener('click', function() {
-      if (state.currentIndex > 0) {
-        audio.stop();
-        state.currentIndex--;
-        state.showTranslation = false;
-        state.showSample = false;
-        state.recordingBlob = null;
-        renderQuestion();
-      }
-    });
-
-    var nextBtn = ui.createElement('button', {
-      className: 'btn btn-primary',
-      disabled: state.currentIndex >= total - 1 ? 'disabled' : null
-    }, '다음 \u2192');
-    nextBtn.addEventListener('click', function() {
-      if (state.currentIndex < total - 1) {
-        audio.stop();
-        state.currentIndex++;
-        state.showTranslation = false;
-        state.showSample = false;
-        state.recordingBlob = null;
-        renderQuestion();
-      }
-    });
-
-    nav.appendChild(prevBtn);
-    nav.appendChild(ui.createElement('span', { className: 'text-muted' }, (state.currentIndex + 1) + ' / ' + total));
-    nav.appendChild(nextBtn);
-    root.appendChild(nav);
   }
 
-  function renderPlayback() {
-    var container = ui.$('#playback-container');
-    if (!container || !state.recordingBlob) return;
-    container.innerHTML = '';
-    var playMyBtn = ui.createElement('button', { className: 'btn btn-secondary btn-icon', title: '내 녹음 재생' }, '\u25B6');
-    playMyBtn.addEventListener('click', function() {
-      var url = URL.createObjectURL(state.recordingBlob);
-      var a = new Audio(url);
-      a.play();
-      a.onended = function() { URL.revokeObjectURL(url); };
-    });
-    container.appendChild(playMyBtn);
+  // ============================================
+  // Event Handlers
+  // ============================================
+
+  /**
+   * 카테고리 선택 처리
+   */
+  function handleCategoryClick(categoryId) {
+    renderFolders(categoryId);
   }
+
+  /**
+   * 폴더 선택 처리
+   */
+  function handleFolderClick(folderId) {
+    renderFiles(state.currentCategory, folderId);
+  }
+
+  /**
+   * 오디오 재생 처리
+   */
+  function handlePlayClick(file) {
+    audio.stop();
+
+    ui.showToast('오디오 파일을 재생합니다.', 'info');
+
+    audio.play(file.audioFile, function onEnded() {
+      state.playingFileId = null;
+    });
+
+    state.playingFileId = file.id;
+  }
+
+  /**
+   * 스크립트 토글 처리 (localStorage에서 직접 읽기)
+   */
+  function handleScriptToggle(fileId) {
+    // 단순 토글 (스크립트 내용은 이미 file.scriptContent에 저장되어 있음)
+    state.expandedScripts[fileId] = !state.expandedScripts[fileId];
+    renderFiles(state.currentCategory, state.currentFolder);
+  }
+
+  /**
+   * 뒤로가기 네비게이션
+   */
+  function handleBackNavigation() {
+    audio.stop();
+
+    if (state.view === 'files') {
+      state.view = 'folders';
+      state.currentFolder = null;
+      state.expandedScripts = {};
+      renderFolders(state.currentCategory);
+    } else if (state.view === 'folders') {
+      state.view = 'categories';
+      state.currentCategory = null;
+      renderCategories();
+    }
+  }
+
+  // ============================================
+  // Helper Functions
+  // ============================================
+  // (스크립트 로딩 함수 제거 - localStorage에서 직접 읽음)
+
+  // ============================================
+  // Public API
+  // ============================================
 
   return {
     init: function() {
-      renderTopicList();
+      renderCategories();
     }
   };
 })();

@@ -175,12 +175,14 @@ ChaoOPIc.core.questionSelector = (function() {
     // === 1번: self-introduction (고정) ===
     var selfIntroFiles = fileScanner.getFilesByTopic('self-introduction');
     if (selfIntroFiles.length > 0) {
+      var selfIntroItem = selfIntroFiles[0];
+      var selfIntroPath = (typeof selfIntroItem === 'string') ? selfIntroItem : (selfIntroItem && selfIntroItem.audioFile) || '';
       questions.push({
         id: 'q1',
         number: 1,
         category: 'self-introduction',
         topic: 'self-introduction',
-        audio: selfIntroFiles[0],
+        audio: selfIntroPath,
         text: 'Hãy giới thiệu về bản thân bạn.',
         translation: '자기소개를 해주세요.'
       });

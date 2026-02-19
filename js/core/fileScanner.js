@@ -10,6 +10,16 @@ ChaoOPIc.core.fileScanner = (function() {
   var audioIndex = null; // localStorage에서 로드됨
 
   /**
+   * 파일 항목에서 경로 문자열 추출 (string 또는 object 대응)
+   * @param {string|Object} item - 파일 경로 문자열 또는 {audioFile: ...} 객체
+   * @returns {string} - 파일 경로 문자열
+   */
+  function getFilePath(item) {
+    if (typeof item === 'string') return item;
+    return (item && item.audioFile) || '';
+  }
+
+  /**
    * localStorage에서 오디오 인덱스 초기화
    * @returns {boolean} - 초기화 성공 여부
    */
@@ -85,7 +95,7 @@ ChaoOPIc.core.fileScanner = (function() {
    * @returns {string} - 추출된 질문 텍스트
    */
   function extractTextFromFilename(filepath) {
-    var filename = filepath.split('/').pop();
+    var filename = getFilePath(filepath).split('/').pop();
 
     // 확장자 제거
     filename = filename.replace(/\.(mp3|m4a|wav|wma)$/i, '');
@@ -112,8 +122,8 @@ ChaoOPIc.core.fileScanner = (function() {
     // 패턴: (시작 또는 하이픈 또는 공백) + 번호 + 점
     // 예: "1. tts...", "Bác sĩ - 11.mp3", "something 11.mp3"
     var pattern = new RegExp('(^|[-\\s])' + number + '\\.');
-    return files.filter(function(filepath) {
-      var filename = filepath.split('/').pop();
+    return files.filter(function(item) {
+      var filename = getFilePath(item).split('/').pop();
       return pattern.test(filename);
     });
   }
@@ -132,7 +142,7 @@ ChaoOPIc.core.fileScanner = (function() {
     }
 
     var randomIndex = Math.floor(Math.random() * matched.length);
-    var selected = matched[randomIndex];
+    var selected = getFilePath(matched[randomIndex]);
     console.log('[fileScanner] Selected file for number', number + ':', selected, '(from', matched.length, 'options)');
     return selected;
   }
@@ -150,7 +160,8 @@ ChaoOPIc.core.fileScanner = (function() {
     }
 
     // 파일명에서 번호 추출하여 매칭
-    files.forEach(function(filepath) {
+    files.forEach(function(item) {
+      var filepath = getFilePath(item);
       var filename = filepath.split('/').pop();
       var match = filename.match(/^(\d+)/);
 
@@ -163,9 +174,9 @@ ChaoOPIc.core.fileScanner = (function() {
     });
 
     // 매칭 실패 시 순서대로 할당
-    if (!result.q1 && files[0]) result.q1 = files[0];
-    if (!result.q2 && files[1]) result.q2 = files[1];
-    if (!result.q3 && files[2]) result.q3 = files[2];
+    if (!result.q1 && files[0]) result.q1 = getFilePath(files[0]);
+    if (!result.q2 && files[1]) result.q2 = getFilePath(files[1]);
+    if (!result.q3 && files[2]) result.q3 = getFilePath(files[2]);
 
     return result;
   }
@@ -183,7 +194,8 @@ ChaoOPIc.core.fileScanner = (function() {
     }
 
     // 파일명에서 번호 추출하여 매칭
-    files.forEach(function(filepath) {
+    files.forEach(function(item) {
+      var filepath = getFilePath(item);
       var filename = filepath.split('/').pop();
       var match = filename.match(/^(\d+)/);
 
@@ -196,9 +208,9 @@ ChaoOPIc.core.fileScanner = (function() {
     });
 
     // 매칭 실패 시 순서대로 할당
-    if (!result.q11 && files[0]) result.q11 = files[0];
-    if (!result.q12 && files[1]) result.q12 = files[1];
-    if (!result.q13 && files[2]) result.q13 = files[2];
+    if (!result.q11 && files[0]) result.q11 = getFilePath(files[0]);
+    if (!result.q12 && files[1]) result.q12 = getFilePath(files[1]);
+    if (!result.q13 && files[2]) result.q13 = getFilePath(files[2]);
 
     return result;
   }

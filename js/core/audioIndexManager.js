@@ -77,7 +77,7 @@ ChaoOPIc.core.audioIndexManager = (function() {
 
     // 각 카테고리 스캔
     await scanCategory(simulationHandle, 'self-introduction', index);
-    await scanCategory(simulationHandle, 'selfAssess', index);
+    await scanCategory(simulationHandle, 'selfAssessment', index);
     await scanCategory(simulationHandle, 'survey', index);
     await scanCategory(simulationHandle, 'non-survey', index);
     await scanCategory(simulationHandle, 'rolePlay', index);
@@ -135,27 +135,71 @@ ChaoOPIc.core.audioIndexManager = (function() {
   }
 
   /**
-   * 폴더 내 오디오 파일 수집
+   * 폴더 내 오디오 파일 수집 (스크립트 파일 포함)
    * @param {FileSystemDirectoryHandle} dirHandle - 폴더 핸들
    * @param {string} basePath - 베이스 경로 (상대 경로)
-   * @returns {Promise<Array<string>>} - 파일 경로 배열
+   * @returns {Promise<Array<Object>>} - 파일 정보 객체 배열
    */
   async function collectAudioFiles(dirHandle, basePath) {
-    var files = [];
+    var audioFiles = [];
+    var scriptFiles = new Set();
     var audioExtensions = ['.mp3', '.m4a', '.wav', '.wma'];
 
+    // 모든 파일 수집
+    var allFiles = [];
     for await (var entry of dirHandle.values()) {
       if (entry.kind === 'file') {
-        var fileName = entry.name;
-        var ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-
-        if (audioExtensions.indexOf(ext) !== -1) {
-          files.push(basePath + '/' + fileName);
-        }
+        allFiles.push(entry.name);
       }
     }
 
-    return files;
+    // 스크립트 파일 목록 생성
+    allFiles.forEach(function(fileName) {
+      var ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+      if (ext === '.txt') {
+        scriptFiles.add(fileName);
+      }
+    });
+
+    // 오디오 파일 처리 (비동기)
+    for (var i = 0; i < allFiles.length; i++) {
+      var fileName = allFiles[i];
+      var ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+
+      if (audioExtensions.indexOf(ext) !== -1) {
+        // 오디오 파일명에서 확장자 제거
+        var nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+        var scriptFileName = nameWithoutExt + '.txt';
+
+        // 스크립트 파일 존재 여부 확인
+        var hasScript = scriptFiles.has(scriptFileName);
+        var scriptContent = null;
+
+        // 스크립트 파일이 있으면 내용 읽기
+        if (hasScript) {
+          try {
+            var scriptFileHandle = await dirHandle.getFileHandle(scriptFileName);
+            var scriptFile = await scriptFileHandle.getFile();
+            scriptContent = await scriptFile.text();
+            console.log('[audioIndexManager] Loaded script:', scriptFileName, '- length:', scriptContent.length);
+          } catch (error) {
+            console.warn('[audioIndexManager] Failed to read script file:', scriptFileName, error);
+            hasScript = false; // 읽기 실패 시 스크립트 없는 것으로 처리
+          }
+        }
+
+        audioFiles.push({
+          audioFile: basePath + '/' + fileName,
+          scriptFile: hasScript ? basePath + '/' + scriptFileName : null,
+          scriptContent: scriptContent, // 스크립트 내용 저장
+          hasScript: hasScript,
+          fileName: fileName,
+          title: nameWithoutExt
+        });
+      }
+    }
+
+    return audioFiles;
   }
 
   /**
@@ -230,13 +274,31 @@ ChaoOPIc.core.audioIndexManager = (function() {
       return null;
     }
 
+    // 스크립트 개수 세기 함수
+    function countScripts(items) {
+      if (Array.isArray(items)) {
+        return items.filter(function(item) { return item.hasScript; }).length;
+      }
+      var count = 0;
+      Object.keys(items).forEach(function(key) {
+        count += items[key].filter(function(item) { return item.hasScript; }).length;
+      });
+      return count;
+    }
+
     return {
       selfIntroduction: index['self-introduction'].length,
+      selfIntroductionScripts: countScripts(index['self-introduction']),
       selfAssess: index['selfAssess'].length,
+      selfAssessScripts: countScripts(index['selfAssess']),
       survey: Object.keys(index['survey']).length,
+      surveyScripts: countScripts(index['survey']),
       nonSurvey: Object.keys(index['non-survey']).length,
+      nonSurveyScripts: countScripts(index['non-survey']),
       rolePlay: Object.keys(index['rolePlay']).length,
-      issueComparison: Object.keys(index['issueComparison']).length
+      rolePlayScripts: countScripts(index['rolePlay']),
+      issueComparison: Object.keys(index['issueComparison']).length,
+      issueComparisonScripts: countScripts(index['issueComparison'])
     };
   }
 

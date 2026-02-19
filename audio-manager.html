@@ -288,19 +288,18 @@
                 statsGrid.innerHTML = '';
 
                 var items = [
-                    { label: 'Self Introduction', value: stats.selfIntroduction },
-                    { label: 'Self Assessment', value: stats.selfAssess },
-                    { label: 'Survey 주제', value: stats.survey },
-                    { label: 'Non-Survey 주제', value: stats.nonSurvey },
-                    { label: 'RolePlay 주제', value: stats.rolePlay },
-                    { label: 'Issue Comparison 주제', value: stats.issueComparison }
+                    { label: 'Survey 주제', value: stats.survey, scripts: stats.surveyScripts },
+                    { label: 'Non-Survey 주제', value: stats.nonSurvey, scripts: stats.nonSurveyScripts },
+                    { label: 'RolePlay 주제', value: stats.rolePlay, scripts: stats.rolePlayScripts },
+                    { label: 'Issue Comparison 주제', value: stats.issueComparison, scripts: stats.issueComparisonScripts }
                 ];
 
                 items.forEach(function(item) {
                     var div = document.createElement('div');
                     div.className = 'stat-item';
                     div.innerHTML = '<div class="label">' + item.label + '</div>' +
-                                    '<div class="value">' + item.value + '</div>';
+                                    '<div class="value">' + item.value + '</div>' +
+                                    '<div class="label" style="font-size:0.8rem;margin-top:4px;">스크립트: ' + item.scripts + '개</div>';
                     statsGrid.appendChild(div);
                 });
             }

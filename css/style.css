@@ -1683,3 +1683,89 @@ footer {
     width: 100%;
   }
 }
+
+/* ============================================
+   Topics Page - File List Styles
+   ============================================ */
+
+/* --- File List Container --- */
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+/* --- File Item --- */
+.file-item {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-light);
+}
+
+.file-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+}
+
+/* --- File Actions --- */
+.file-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.btn-sm {
+  font-size: 0.85rem;
+  padding: var(--space-xs) var(--space-md);
+}
+
+/* --- Script Content --- */
+.script-content {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background-color: #f8fafc;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+  line-height: 1.8;
+  color: var(--color-text);
+}
+
+.script-content.hidden {
+  display: none;
+}
+
+.script-content p {
+  margin-bottom: var(--space-sm);
+  color: var(--color-text);
+}
+
+/* --- Empty State --- */
+.empty-message {
+  text-align: center;
+  color: var(--color-text-light);
+  padding: var(--space-xl);
+  font-size: 0.95rem;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .file-actions {
+    flex-direction: column;
+  }
+
+  .file-actions .btn {
+    width: 100%;
+  }
+}
