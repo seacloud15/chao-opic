@@ -1769,3 +1769,253 @@ footer {
     width: 100%;
   }
 }
+
+/* ============================================
+   Vocabulary Page - Tabs, List, Form
+   ============================================ */
+
+/* --- Tabs --- */
+.vocab-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--space-lg);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.vocab-tab {
+  padding: var(--space-sm) var(--space-lg);
+  border: none;
+  background: none;
+  font-size: 0.95rem;
+  font-family: var(--font-family);
+  font-weight: 500;
+  color: var(--color-text-light);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.vocab-tab:hover {
+  color: var(--color-primary);
+}
+
+.vocab-tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* --- Search --- */
+.vocab-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.vocab-search {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.vocab-search:focus {
+  border-color: var(--color-primary-light);
+}
+
+.vocab-count {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+/* --- Word Table --- */
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.vocab-table thead {
+  background: var(--color-bg);
+}
+
+.vocab-table th {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.vocab-table td {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.vocab-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.vocab-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.vocab-word-cell {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.vocab-pron-cell {
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+}
+
+.vocab-next-review {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+}
+
+/* --- Badges --- */
+.vocab-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-new {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.badge-learning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-mastered {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* --- Add Word Form --- */
+.vocab-form {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  max-width: 560px;
+}
+
+.vocab-form-group {
+  margin-bottom: var(--space-md);
+}
+
+.vocab-form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.vocab-form-input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.vocab-form-input:focus {
+  border-color: var(--color-primary-light);
+}
+
+select.vocab-form-input {
+  cursor: pointer;
+}
+
+.vocab-form-actions {
+  margin-top: var(--space-lg);
+}
+
+/* --- Recent Custom Words --- */
+.vocab-recent {
+  margin-top: var(--space-xl);
+}
+
+.vocab-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.vocab-recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.vocab-recent-word {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  min-width: 100px;
+}
+
+.vocab-recent-meaning {
+  flex: 1;
+  color: var(--color-text);
+}
+
+.vocab-recent-cat {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  min-width: 50px;
+}
+
+/* --- Vocabulary Responsive --- */
+@media (max-width: 768px) {
+  .vocab-tabs {
+    overflow-x: auto;
+  }
+
+  .vocab-search-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vocab-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .vocab-form {
+    max-width: 100%;
+  }
+
+  .vocab-recent-item {
+    flex-wrap: wrap;
+  }
+}

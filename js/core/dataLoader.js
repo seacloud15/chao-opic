@@ -45,20 +45,50 @@ ChaoOPIc.core.dataLoader = (function() {
       return topic;
     },
 
-    // 어휘 데이터 반환 (카테고리 필터)
+    // 사용자 추가 단어 로드
+    getCustomWords: function() {
+      try {
+        var raw = localStorage.getItem(ChaoOPIc.config.storagePrefix + 'customWords');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    },
+
+    // 사용자 추가 단어 저장
+    saveCustomWords: function(words) {
+      try {
+        localStorage.setItem(ChaoOPIc.config.storagePrefix + 'customWords', JSON.stringify(words));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+
+    // 어휘 데이터 반환 (기본 + 사용자 추가 단어 병합)
     getVocabulary: function(category) {
       var data = ChaoOPIc.data.vocabulary;
-      if (!data || !data.words) return [];
-      if (!category || category === 'all') return data.words;
-      return data.words.filter(function(w) {
+      var baseWords = (data && data.words) ? data.words : [];
+      var customWords = this.getCustomWords();
+      var allWords = baseWords.concat(customWords);
+
+      if (!category || category === 'all') return allWords;
+      return allWords.filter(function(w) {
         return w.category === category;
       });
     },
 
-    // 어휘 카테고리 목록 반환
+    // 어휘 카테고리 목록 반환 (사용자 추가 카테고리 포함)
     getVocabularyCategories: function() {
       var data = ChaoOPIc.data.vocabulary;
-      return (data && data.categories) ? data.categories : [];
+      var categories = (data && data.categories) ? data.categories.slice() : [];
+      var customWords = this.getCustomWords();
+      customWords.forEach(function(w) {
+        if (w.category && categories.indexOf(w.category) === -1) {
+          categories.push(w.category);
+        }
+      });
+      return categories;
     },
 
     // 시뮬레이션 질문 반환 (필터 + 셔플)
