@@ -1,0 +1,2 @@
+스크립트: Mô tả cho tôi chuyến đi du lịch đầu tiên của bạn đến một quốc gia khác. Bạn đã đi nước nào? Bạn đi cùng với ai? Bạn đã làm gì? Mô tả chi tiết cho tôi về chuyến du lịch đó.
+한국어 번역: 다른 국가로 떠난 첫 번째 해외여행에 대해 묘사해 주세요. 어느 나라에 갔나요? 누구와 함께 갔나요? 무엇을 했나요? 그 여행에 대해 자세히 묘사해 주세요.

@@ -1,0 +1,2 @@
+스크립트: Tôi muốn biết tất cả những việc bạn đã làm trong kỳ nghỉ ở nhà gần đây nhất. Kỳ nghỉ gần đây nhất của bạn là khi nào? Khi đó bạn đã làm gì?
+한국어 번역: 가장 최근에 집에서 보낸 휴일에 했던 모든 일들을 알고 싶습니다. 가장 최근의 휴일은 언제였나요? 그때 무엇을 했나요?

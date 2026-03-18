@@ -1,0 +1,2 @@
+스크립트: Trong bản khảo sát, bạn nói rằng bạn thích nghe nhạc. Hãy nói cho tôi nghe về thể loại âm nhạc ưu thích của bạn. Bạn thích nhạc sĩ nào?
+한국어 번역: 설문조사에서 음악 듣는 것을 좋아한다고 하셨습니다. 당신이 즐겨 듣는 음악 장르에 대해 이야기해 주세요. 어떤 음악가를 좋아하나요?

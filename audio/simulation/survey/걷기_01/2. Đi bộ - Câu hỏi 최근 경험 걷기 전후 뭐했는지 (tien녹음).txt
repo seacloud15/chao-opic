@@ -1,0 +1,2 @@
+스크립트: Hãy nói cho tôi về lần cuối bạn đi bộ. Bạn đã đi bộ ở đâu và đã có chuyện gì xảy ra? Bạn đã chuẩn bị gì để đi bộ? Bạn đã làm gì sau khi đi bộ?
+한국어 번역: 마지막으로 걸었던 때에 대해 이야기해 주세요. 어디서 걸었고 무슨 일이 있었나요? 걷기 위해 무엇을 준비했나요? 걷고 난 후에는 무엇을 했나요?

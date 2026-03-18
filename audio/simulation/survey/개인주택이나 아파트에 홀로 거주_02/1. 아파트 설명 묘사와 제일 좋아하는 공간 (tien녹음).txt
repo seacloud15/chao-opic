@@ -1,0 +1,2 @@
+스크립트: Bạn đã nói trong bản khảo sát là bạn sống một mình ở chung cư. Hãy miêu tả căn hộ của bạn. Căn hộ của bạn có mấy phòng? Bạn thích không gian nào nhất trong căn hộ của bạn?
+한국어 번역: 설문조사에서 아파트에 혼자 살고 있다고 하셨습니다. 아파트를 묘사해 주세요. 방이 몇 개 있나요? 아파트에서 어떤 공간을 가장 좋아하시나요?

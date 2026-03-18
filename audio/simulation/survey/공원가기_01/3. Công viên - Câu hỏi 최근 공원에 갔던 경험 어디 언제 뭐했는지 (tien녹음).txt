@@ -1,0 +1,2 @@
+스크립트: Hãy nói cho tôi về lần cuối bạn đi công viên. Đó là công viên nào, bạn đã đi khi nào. Hãy nói cho tôi tất cả những thứ bạn đã làm từ khi bạn đến cho đến khi bạn rời công viên.
+한국어 번역: 마지막으로 공원에 갔던 때에 대해 이야기해 주세요. 어느 공원이었고, 언제 갔었나요? 공원에 도착해서 떠날 때까지 했던 모든 일들을 말씀해 주세요.

@@ -1,0 +1,2 @@
+스크립트: Hãy nói cho tôi về lần gần đây nhất bạn đi du lịch trong nước. Bạn đã đi du lịch ở đâu và đã có chuyện gì xảy ra. Bạn đi với ai? Hãy nói cho tôi về những việc bạn đã làm ở đó.
+한국어 번역: 가장 최근에 다녀온 국내 여행에 대해 이야기해 주세요. 어디로 여행을 갔고 무슨 일이 있었나요? 누구와 함께 갔나요? 그곳에서 했던 일들에 대해 말씀해 주세요.

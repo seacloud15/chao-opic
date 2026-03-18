@@ -1,0 +1,2 @@
+스크립트: Bạn đã cho biết trong bản khảo sát là bạn thích xem phim. Hãy nói cho tôi thể loại phim mà bạn thích xem. Tại sao bạn thích thể loại phim đó?
+한국어 번역: 설문조사에서 영화 보는 것을 좋아한다고 하셨습니다. 당신이 즐겨보는 영화 장르를 말씀해 주세요. 왜 그 영화 장르를 좋아하시나요?

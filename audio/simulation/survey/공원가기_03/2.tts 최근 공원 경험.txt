@@ -1,0 +1,2 @@
+스크립트: Gần đây nhất bạn đi công viên là khi nào? Bạn đã làm gì ở công viên này? Hãy nói cho tôi biết một cách chi tiết. Bạn đã làm gì ở công viên đó và đó là hoạt động gì.
+한국어 번역: 가장 최근에 공원에 간 것은 언제인가요? 이 공원에서 무엇을 했나요? 구체적으로 말씀해 주세요. 그 공원에서 무엇을 했고 어떤 활동이었나요?
